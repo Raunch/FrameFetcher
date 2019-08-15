@@ -9,38 +9,56 @@ import functools
 import os
 import re
 import subprocess
-import urllib
 
-def getVideoFromWeb(url, savePath):
-    #scheme, _, path, _, _, = urllib.parse.urlsplit(url)
+from DownloadHelper import HttpsDownloader
+from DownloadHelper import YoutubeDownloader
+
+def getVideoFromWeb(url, savePath):    
     if not os.path.exists(savePath):
-        os.makedirs(savePath)
-    defaultName = "bematevideo"
+        os.makedirs(savePath)    
     for file in os.listdir(savePath):
         os.remove(os.path.join(savePath, file))
-    cmdList = ["you-get", "-o", savePath, "-O", defaultName, url, "--force"]
-    print (cmdList)
-    result = subprocess.call(cmdList)
-    targetFile = os.path.join(savePath, defaultName + ".mp4")
-    if result == 0:
-        print (targetFile)
-        if os.path.exists(targetFile):
-            return targetFile
-        else:
-            fileWithNoSuffix = os.path.join(savePath, defaultName)
-            fileWithOtherSuffix = os.path.join(savePath, defaultName + ".MP4")
-            if os.path.exists(fileWithNoSuffix):
-                os.rename(fileWithNoSuffix, targetFile)
-            elif os.path.exists(fileWithOtherSuffix):
-                os.rename(fileWithOtherSuffix, targetFile)
-            else:
-                return None
-            return targetFile
+    defaultName = "bematevideo"
+    
+    if str(url).startswith("youtube"):
+        youtubeDownloader = YoutubeDownloader(url, savePath)
+        splits = str(url).split("://")        
+        if not youtubeDownloader.download(splits[1]):
+            return None
+    else:    
+        myDownload = HttpsDownloader(url, savePath)              
+        if not myDownload.download("bemate"):
+            return None
+    
         
+    #cmdList = ["you-get", "-o", savePath, "-O", defaultName, url, "--force"]
+    #print (cmdList)
+    #result = subprocess.call(cmdList)
+    targetFileWithMp4 = os.path.join(savePath, defaultName + ".mp4")
+    targetFileWithWebm = os.path.join(savePath, defaultName + ".webm")
+    
+        
+    if os.path.exists(targetFileWithMp4):
+        return targetFileWithMp4
+    elif os.path.exists(targetFileWithWebm):
+        return targetFileWithWebm
     else:
-        return None    
+        fileWithNoSuffix = os.path.join(savePath, defaultName)
+        fileWithMp4Suffix = os.path.join(savePath, defaultName + ".MP4")
+        fileWithWebmSuffix = os.path.join(savePath, defaultName + ".WEBM")
+        if os.path.exists(fileWithNoSuffix):
+            os.rename(fileWithNoSuffix, targetFileWithMp4)
+            return targetFileWithMp4
+        elif os.path.exists(fileWithMp4Suffix):
+            os.rename(fileWithMp4Suffix, targetFileWithMp4)
+            return targetFileWithMp4
+        elif os.path.exists(fileWithWebmSuffix):
+            os.rename(fileWithWebmSuffix, targetFileWithWebm)
+            return targetFileWithWebm
+        else:
+            return None
 
-def extract_frames(video_file, saveFolder, num_frames=8):
+def extract_frames(video_file, saveFolder, rate):
     """Return a list of PIL image frames uniformly sampled from an mp4 video."""
     try:
         if not os.path.exists(saveFolder):
@@ -55,17 +73,19 @@ def extract_frames(video_file, saveFolder, num_frames=8):
 
     seconds = functools.reduce(lambda x, y: x * 60 + y,
                                map(int, duration.split(':')))
-    print ("time long is " + str(seconds))
-    #rate = num_frames / float(seconds)
-    num_frames = seconds
-    rate = 1
     
-
+    num_frames = int (seconds / float(rate))
+    rate = num_frames / float(seconds)
+    
     output = subprocess.call(['ffmpeg', '-i', video_file,
-                               '-vf', 'fps={}'.format(rate),
+                                '-vf', 'fps={}'.format(rate),
                                '-vframes', str(num_frames),
                                '-loglevel', 'panic',
-                               saveFolder + '%d.jpeg'])
+                               os.path.join(saveFolder,'%d.jpeg')])
+    
+    
+
+
     if output == 0 :
         os.remove(video_file)
         frame_paths = sorted([os.path.join(saveFolder, frame)
@@ -73,16 +93,13 @@ def extract_frames(video_file, saveFolder, num_frames=8):
         return frame_paths
     else:
         return None
-        
- 
-    
     
 
-def fetchFrameWithUrl(url, savePath):
-    videoPath = getVideoFromWeb(url, savePath)
-    print ("the video now is " + videoPath)
+def fetchFrameWithUrl(url, savePath, rate):
+    videoPath = getVideoFromWeb(url, savePath)    
     if not videoPath == None :
-        result = extract_frames(videoPath, savePath)
+        print ("the video now is " + videoPath)
+        result = extract_frames(videoPath, savePath, rate)
         if not result == None:
             return result
         else:
@@ -95,7 +112,11 @@ def fetchFrameWithUrl(url, savePath):
 if __name__ == '__main__':
     url = os.sys.argv[1]
     savePath= os.sys.argv[2]
-    result = fetchFrameWithUrl(url, savePath)
-    for frame in result :
-        print ("final pic path: " + frame)
+    rate = os.sys.argv[3]
+    result = fetchFrameWithUrl(url, savePath, rate)
+    if result == None:
+        print ("no pics")
+    else:
+        for frame in result :
+            print ("final pic path: " + frame)
     pass

@@ -16,13 +16,13 @@ class Downloader(object):
     '''
 
 
-    def __init__(self, url):
+    def __init__(self, url, savepath):
         '''
         Constructor
         '''
         self.url = url
-        self.outputFolder = "/home/centos/Downloads/tensorvideo"
-        #self.outputFolder = os.path.join("G:\\", "testfilename", "hello")
+        self.outputFolder = savepath
+        self.defaultName = "bematevideo"
         
     def download(self):
         print ("download the url")
@@ -34,30 +34,27 @@ class YoutubeDownloader(Downloader):
     '''
 
 
-    def __init__(self, url):
+    def __init__(self, url, savepath):
         '''
         Constructor
         '''
-        Downloader.__init__(self, url)
+        Downloader.__init__(self, url, savepath)
         
     def download(self, name):        
         downUrl = "https://www.youtube.com/watch?v=" + name
         tagResult = self.getItagfor18(downUrl)
-        if tagResult:
-            videoFile = os.path.join(self.outputFolder,"\"" + tagResult["name"] + "." + tagResult["container"] +"\"")
-            if os.path.exists(videoFile):
-                os.remove(videoFile)
-            cmdList = cmdList = ["you-get", "--itag=" + tagResult["tag"], "-o", self.outputFolder, downUrl]            
+        if tagResult:            
+            cmdList = ["you-get", "--itag=" + tagResult["tag"], "-o", self.outputFolder, "-O", self.defaultName, downUrl]            
         else:
-            return None                
+            return False                
         print (cmdList)
+        print (tagResult["container"])
         
         result = subprocess.call(cmdList)
         if result == 0:            
-            return os.path.join(self.outputFolder,tagResult["name"] + "." + tagResult["container"])
+            return True
         else:
-            print ("youtube fetch err")
-            return None
+            return False
         
     def getItagfor18(self, url):
         result = {}
@@ -91,24 +88,20 @@ class HttpsDownloader(Downloader):
     '''
 
 
-    def __init__(self, url):
+    def __init__(self, url, savepath):
         '''
         Constructor
         '''
-        Downloader.__init__(self, url)
+        Downloader.__init__(self, url, savepath)
         
     def download(self, name):
-        splitsNames = str(name).split(".")
-        outputName = os.path.join(self.outputFolder, splitsNames[0])
-        if os.path.exists(outputName):
-            os.remove(outputName)
-        cmdList = ["you-get", "-o", self.outputFolder, "-O", splitsNames[0], self.url, "--force"]
+        cmdList = ["you-get", "-o", self.outputFolder, "-O", self.defaultName, self.url, "--force"]
         print (cmdList)
         result = subprocess.call(cmdList)
         if result == 0:
-            return os.path.join(self.outputFolder, name)
+            return True
         else:
-            return None
+            return False
 
 
 def getItagfor18(url):
