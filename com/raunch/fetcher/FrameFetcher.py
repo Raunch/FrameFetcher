@@ -57,7 +57,11 @@ def getVideoFromWeb(url, savePath):
             os.rename(fileWithWebmSuffix, targetFileWithWebm)
             return targetFileWithWebm
         else:
-            return None
+            otherFiles = os.listdir(savePath)
+            if not otherFiles == None:
+                return str(os.path.join(savePath,otherFiles[0]))
+            else:
+                return None
 
 def extract_frames(video_file, saveFolder, rate):
     """Return a list of PIL image frames uniformly sampled from an mp4 video."""
@@ -101,7 +105,10 @@ def extract_frames(video_file, saveFolder, rate):
 def fetchFrameWithUrl(url, savePath, rate):
     videoPath = getVideoFromWeb(url, savePath)    
     if not videoPath == None :
-        print ("the video now is " + videoPath)
+        print ("the file path now is " + videoPath)
+        imgPath = handleImage(savePath, videoPath)
+        if not  imgPath == None:
+            return [imgPath]
         result = extract_frames(videoPath, savePath, rate)
         if not result == None:
             return result
@@ -109,7 +116,33 @@ def fetchFrameWithUrl(url, savePath, rate):
             return None
     else:
         return None
-        
+  
+  
+def handleImage(savePath, filePath):
+    endWithJPG = str(filePath).lower().endswith("jpg") or str(savePath).lower().endswith("jpeg")
+    endWithPNG = str(filePath).lower().endswith("png")
+    endWithWebp = str(filePath).lower().endswith("webp")
+    endWithGif = str(filePath).lower().endswith("gif")    
+    time_prefix = str (int (time.time() * 1000)) + "_0001" 
+    if endWithJPG:
+        targetFilePath = os.path.join(savePath, time_prefix + ".jpg")
+        os.rename(filePath, targetFilePath)
+        return targetFilePath
+    elif endWithPNG:
+        targetFilePath = os.path.join(savePath, time_prefix + ".png")
+        os.rename(filePath, targetFilePath)
+        return targetFilePath
+    elif endWithWebp:
+        targetFilePath = os.path.join(savePath, time_prefix + ".webp")
+        os.rename(filePath, targetFilePath)
+        return targetFilePath
+    elif endWithGif:
+        targetFilePath = os.path.join(savePath, time_prefix + ".gif")
+        os.rename(filePath, targetFilePath)
+        return targetFilePath
+    else:
+        return None
+    
 
 
 if __name__ == '__main__':
