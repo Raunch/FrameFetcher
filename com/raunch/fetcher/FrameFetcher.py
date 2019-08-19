@@ -9,6 +9,7 @@ import functools
 import os
 import re
 import subprocess
+import time
 
 from DownloadHelper import HttpsDownloader
 from DownloadHelper import YoutubeDownloader
@@ -77,11 +78,13 @@ def extract_frames(video_file, saveFolder, rate):
     num_frames = int (seconds / float(rate))
     rate = num_frames / float(seconds)
     
+    time_prefix = str (int (time.time() * 1000)) + "_"
+    
     output = subprocess.call(['ffmpeg', '-i', video_file,
                                 '-vf', 'fps={}'.format(rate),
                                '-vframes', str(num_frames),
                                '-loglevel', 'panic',
-                               os.path.join(saveFolder,'%d.jpeg')])
+                               os.path.join(saveFolder,time_prefix + '%4d.jpeg')])
     
     
 
