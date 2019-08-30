@@ -13,6 +13,7 @@ import time
 
 from DownloadHelper import HttpsDownloader
 from DownloadHelper import YoutubeDownloader
+import FabricateImages
 
 def getVideoFromWeb(url, savePath):    
     if not os.path.exists(savePath):
@@ -108,9 +109,14 @@ def fetchFrameWithUrl(url, savePath, rate):
         print ("the file path now is " + videoPath)
         imgPath = handleImage(savePath, videoPath)
         if not  imgPath == None:
+            FabricateImages.getThumbnail(imgPath)
+            FabricateImages.getCoverRatio(imgPath, 4, 3)
             return [imgPath]
         result = extract_frames(videoPath, savePath, rate)
         if not result == None:
+            for frame in result:
+                FabricateImages.getThumbnail(frame)
+                FabricateImages.getCoverRatio(frame, 4, 3)
             return result
         else:
             return None
