@@ -21,15 +21,28 @@ MEDIUM_QUARTER_WIDTH = 400
 MEDIUM_QUARTER_HEIGHT = 300
 
 
-
+def removeOldThumbnail(path):
+    if path.endswith("/") or path.endswith("\\"):
+        dirName = os.path.basename(os.path.dirname(path)) + "_thumbnail"
+        saveDirParent = os.path.dirname(os.path.dirname(path))
+    else:
+        dirName = os.path.basename(path) + "_thumbnail"
+        saveDirParent = os.path.dirname(path)
+    
+    saveDir = os.path.join(saveDirParent, dirName)
+    if not os.path.exists(saveDir):
+        os.makedirs(saveDir)
+    for file in os.listdir(saveDir):
+        os.remove(os.path.join(saveDir, file))
 
 
 def getThumbnail(path):
     fileName = os.path.basename(path)
+    dirName = os.path.basename(os.path.dirname(path)) + "_thumbnail"
     saveDirParent = os.path.dirname(os.path.dirname(path))
-    saveDir = os.path.join(saveDirParent, "thumbnail")
+    saveDir = os.path.join(saveDirParent, dirName)
     if not os.path.exists(saveDir):
-        os.makedirs(saveDir)
+        os.makedirs(saveDir)    
     savePath = os.path.join(saveDir, fileName)
     im = Image.open(path)
     vertical = True

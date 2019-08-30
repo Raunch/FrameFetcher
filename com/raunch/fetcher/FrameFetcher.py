@@ -19,7 +19,10 @@ def getVideoFromWeb(url, savePath):
     if not os.path.exists(savePath):
         os.makedirs(savePath)    
     for file in os.listdir(savePath):
-        os.remove(os.path.join(savePath, file))
+        if os.path.isfile(os.path.join(savePath, file)):
+            os.remove(os.path.join(savePath, file))
+        elif os.path.isdir(os.path.join(savePath, file)):
+            os.removedirs(os.path.join(savePath, file))
     defaultName = "bematevideo"
     
     if str(url).startswith("youtube"):
@@ -109,11 +112,13 @@ def fetchFrameWithUrl(url, savePath, rate):
         print ("the file path now is " + videoPath)
         imgPath = handleImage(savePath, videoPath)
         if not  imgPath == None:
+            FabricateImages.removeOldThumbnail(savePath)
             FabricateImages.getThumbnail(imgPath)
             FabricateImages.getCoverRatio(imgPath, 4, 3)
             return [imgPath]
         result = extract_frames(videoPath, savePath, rate)
         if not result == None:
+            FabricateImages.removeOldThumbnail(savePath)
             for frame in result:
                 FabricateImages.getThumbnail(frame)
                 FabricateImages.getCoverRatio(frame, 4, 3)
